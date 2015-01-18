@@ -114,6 +114,14 @@ class PyHelp(object):
             filename = base_name + unicode(count) + u".json"
         return filename
 
+    def __create_file(self, filename):
+        create_command = u"touch %s" % filename
+        chmod_command = u"chmod 755 %s" % filename
+        edit_command = u"vim %s" % filename
+        commands = [create_command, chmod_command, edit_command]
+        for command in commands:
+            subprocess.call(command, shell=True)
+
     @staticmethod
     def help():
         print u"""
@@ -182,8 +190,9 @@ class PyHelp(object):
             json.dump(result, outfile, ensure_ascii=False, indent=4)
         self.database.delete(command=command, category=category)
         self.database.close()
-        command = u"sudo vim %s" % filename
-        subprocess.call(command, shell=True)
+
+        self.__create_file(filename)
+
 
     def delete(self, command, category=u""):
         self.database.delete(command=command, category=category)
@@ -214,8 +223,8 @@ class PyHelp(object):
         filename = self.__find_avail_filename()
         with codecs.open(filename, u"w", u"utf-8") as outfile:
             json.dump(file_content, outfile, ensure_ascii=False, indent=4)
-        command = u"sudo vim %s" % filename
-        subprocess.call(command, shell=True)
+
+        self.__create_file(filename)
 
     def clean_dir(self):
         files = os.listdir(self.data_dir)
@@ -302,5 +311,4 @@ def main():
 
 
 if __name__ == u"__main__":
-    import pdb; pdb.set_trace()
     main()
