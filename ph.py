@@ -96,7 +96,11 @@ class Database(object):
 
 class PyHelp(object):
     def __init__(self):
-        self.home_dir = u"/home/lintong"
+        with open(u"ph_config.ini", u"r") as f:
+            self.home_dir = f.readline()
+            self.home_dir = self.home_dir.strip()
+            if self.home_dir.endswith("/"):
+                self.home_dir = self.home_dir[:-1]
         self.data_dir = self.home_dir + os.sep + u"pyhelp"
         self.database = Database(self.home_dir + os.sep + u"pyhelp.db")
 
@@ -298,4 +302,5 @@ def main():
 
 
 if __name__ == u"__main__":
+    import pdb; pdb.set_trace()
     main()
