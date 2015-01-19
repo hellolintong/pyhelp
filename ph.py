@@ -39,6 +39,8 @@ class Database(object):
         self.connection.commit()
 
     def __encode_exam(self, exam_list):
+        if not exam_list:
+            return u""
         result = []
         for elem in exam_list:
             exam = elem[0] + self.exam_inner_split + elem[1]
@@ -47,6 +49,8 @@ class Database(object):
         return exam_str
 
     def __decode_exam(self, exam_str):
+        if not exam_str:
+            return []
         result = exam_str.split(self.exam_out_split)
         exam_list = []
         for elem in result:
@@ -118,7 +122,7 @@ class Database(object):
 
 class PyHelp(object):
     def __init__(self):
-        with open(u"ph_config.ini", u"r") as f:
+        with open(u"/usr/bin/ph_config.ini", u"r") as f:
             self.home_dir = f.readline()
             self.home_dir = self.home_dir.strip()
             if self.home_dir.endswith(u"/"):
