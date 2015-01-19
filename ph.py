@@ -12,6 +12,8 @@ import subprocess
 
 class Database(object):
     def __init__(self, db_name):
+        self.exam_out_split = u"{{::}}"
+        self.exam_inner_split = u"{{##}}"
         self.connection = sqlite3.connect(db_name)
         command = u"chmod 755 %s" % db_name
         subprocess.call(command, shell=True)
@@ -24,6 +26,7 @@ class Database(object):
               command TEXT NOT NULL ,
               brief TEXT NOT NULL ,
               detail TEXT,
+              exam TEXT,
               PRIMARY KEY (id)
               UNIQUE (command, category)
             );
@@ -35,12 +38,29 @@ class Database(object):
         self.cursor.execute(create_index_stmt)
         self.connection.commit()
 
-    def insert(self, category, command, brief, detail=u"none"):
+    def __encode_exam(self, exam_list):
+        result = []
+        for elem in exam_list:
+            exam = elem[0] + self.exam_inner_split + elem[1]
+            result.append(exam)
+        exam_str = self.exam_out_split.join(result)
+        return exam_str
+
+    def __decode_exam(self, exam_str):
+        result = exam_str.split(self.exam_out_split)
+        exam_list = []
+        for elem in result:
+            exam_elem = elem.split(self.exam_inner_split)
+            exam_list.append([exam_elem[0], exam_elem[1]])
+        return exam_list
+
+    def insert(self, category, command, brief, detail=u"", exam=[]):
         insert_stmt = u"""
-                        INSERT INTO pyhelp (category, command, brief, detail)
-                        VALUES (?, ?, ?, ?);
+                        INSERT INTO pyhelp (category, command, brief, detail, exam)
+                        VALUES (?, ?, ?, ?, ?);
                         """
-        record = (category, command, brief, detail)
+        exam = self.__encode_exam(exam)
+        record = (category, command, brief, detail, exam)
         self.cursor.execute(insert_stmt, record)
         self.connection.commit()
         return self.cursor.rowcount
@@ -48,30 +68,31 @@ class Database(object):
     def query(self, command=u"", category=u""):
         if not category and not command:
             query_stmt = u"""
-                 SELECT category, command, brief, detail FROM pyhelp
+                 SELECT category, command, brief, detail, exam FROM pyhelp
             """
             record = ()
 
         elif category and command:
             query_stmt = u"""
-                SELECT category, command, brief, detail FROM pyhelp WHERE command=? AND category=?;
+                SELECT category, command, brief, detail, exam FROM pyhelp WHERE command=? AND category=?;
             """
             record = (command, category)
         elif command:
             query_stmt = u"""
-                SELECT category, command, brief, detail FROM pyhelp WHERE command=?;
+                SELECT category, command, brief, detail, exam FROM pyhelp WHERE command=?;
             """
             record = (command, )
         elif category:
             query_stmt = u"""
-                SELECT category, command, brief, detail FROM pyhelp WHERE category=?;
+                SELECT category, command, brief, detail, exam FROM pyhelp WHERE category=?;
             """
             record = (category, )
 
         ret = self.cursor.execute(query_stmt, record)
         result = []
         for row in ret:
-            result.append({u"category": row[0], u"command": row[1], u"brief": row[2], u"detail": row[3]})
+            exam_list = self.__decode_exam(row[4])
+            result.append({u"category": row[0], u"command": row[1], u"brief": row[2], u"detail": row[3], u"exam": exam_list})
         return result
 
     def delete(self, command, category=u""):
@@ -85,7 +106,8 @@ class Database(object):
               DELETE  FROM pyhelp WHERE command=?;
             """
             record = (command, )
-
+        else:
+            return
         self.cursor.execute(delete_stmt, record)
         self.connection.commit()
         return self.cursor.rowcount
@@ -99,7 +121,7 @@ class PyHelp(object):
         with open(u"ph_config.ini", u"r") as f:
             self.home_dir = f.readline()
             self.home_dir = self.home_dir.strip()
-            if self.home_dir.endswith("/"):
+            if self.home_dir.endswith(u"/"):
                 self.home_dir = self.home_dir[:-1]
         self.data_dir = self.home_dir + os.sep + u"pyhelp"
         self.database = Database(self.home_dir + os.sep + u"pyhelp.db")
@@ -134,6 +156,7 @@ class PyHelp(object):
             2：command: 命令名称。
             3：brief：命令的简要说明（在默认情况下只显示命令的简要说明信息）。
             4：detail：命令的详细说明。
+            5: exam: 考查内容。以数组的形式，每个数组元素代表一个测试单元，测试单元的第一项表示：question，第二项表示: answer
 
             用法：
             1:插入命令：在终端输入ph.py -i [需要记录的命令的数量]。
@@ -154,8 +177,49 @@ class PyHelp(object):
             6:查看命令: 在终端输入ph.py command [-category category_name] [-detail]。该命令会显示相关命令的信息
               添加-detail参数表示是否详细显示命令。
 
+            7:测试命令: 在终端输入ph.py -t category。该命令会显示category下的所有命令的测试内容，用户根据提示信息，输入相应的命令，直到输入全部的命令为止。
+
             7：寻求帮助: 在终端中输入ph.py -h，会显示详细的帮助信息, -h 是help的缩写。
         """
+
+    def __strip_blank(self, data):
+        return u"".join(data.split(u" "))
+
+    def exam(self, category):
+        result_list = self.database.query(command=u"", category=category)
+        self.database.close()
+        subprocess.call(u"clear", shell=True)
+        index = 0
+        while result_list:
+            result = result_list[index]
+            if not result[u"exam"]:
+                print result[u"brief"]
+                input_command = raw_input(u":")
+                input_command = self.__strip_blank(input_command)
+                result_command = result[u"command"]
+                result_command = self.__strip_blank(result_command)
+                if input_command == result_command:
+                    del result_list[index]
+            else:
+                exam_index = 0
+                exam_list = result[u"exam"]
+                while exam_list:
+                    exam = exam_list[exam_index]
+                    print exam[0]
+                    input_command = raw_input(u":")
+                    input_command = self.__strip_blank(input_command)
+                    result_command = exam[1]
+                    result_command = self.__strip_blank(result_command)
+                    if input_command == result_command:
+                        del exam_list[exam_index]
+                    if not exam_list:
+                        del result_list[index]
+                        break
+                    exam_index = (exam_index + 1) % len(exam_list)
+            subprocess.call(u"clear", shell=True)
+            if not result_list:
+                break
+            index = (index + 1) % len(result_list)
 
     def query(self, command=u"", category=u"", detail_flag=False):
         if not command and not category:
@@ -164,11 +228,16 @@ class PyHelp(object):
         for result in result_list:
             if not detail_flag:
                 if category:
-                    print result[u"command"]
-                    print result[u"brief"]
+                    print result[u"command"] + u"\t" + result[u"brief"]
                     print u"\n"
                 else:
                     print result[u"brief"]
+                    print u"\n"
+                for elem in result[u"exam"]:
+                    print elem[0]
+                    print elem[1]
+                    print u"==="
+
             else:
                 print u"category: " + result[u"category"]
                 #print u"\n"
@@ -177,14 +246,19 @@ class PyHelp(object):
                 print u"brief: " + result[u"brief"]
                 #print u"\n"
                 print u"detail: " + result[u"detail"]
+
+                for elem in result[u"exam"]:
+                    print elem[0]
+                    print elem[1]
+                    print u"==="
+
                 print u"\n"
                 #print u"\n"
         self.database.close()
 
     def edit(self, command, category=u""):
         result = self.database.query(command, category)
-        if len(result) != 1:
-            return False
+
         filename = self.__find_avail_filename()
         with codecs.open(filename, u"w", encoding=u"utf-8") as outfile:
             json.dump(result, outfile, ensure_ascii=False, indent=4)
@@ -192,7 +266,6 @@ class PyHelp(object):
         self.database.close()
 
         self.__create_file(filename)
-
 
     def delete(self, command, category=u""):
         self.database.delete(command=command, category=category)
@@ -207,6 +280,7 @@ class PyHelp(object):
             print u"随机生成文件名 %s" % filename
 
         result = self.database.query(command=u"", category=category)
+
         with codecs.open(filename, u"w", encoding=u"utf-8") as outfile:
             json.dump(result, outfile, ensure_ascii=False, indent=4)
         self.database.close()
@@ -215,7 +289,7 @@ class PyHelp(object):
         if not os.path.exists(self.data_dir):
             os.mkdir(self.data_dir)
 
-        json_data = {u"category": u"", u"command": u"", u"brief": u"", u"detail": u""}
+        json_data = {u"category": u"", u"command": u"", u"brief": u"", u"detail": u"", u"exam": []}
         file_content = []
         for i in xrange(number):
             file_content.append(json_data)
@@ -242,7 +316,7 @@ class PyHelp(object):
                         category = elem[u"category"].split(u" ")
                         elem[u"category"] = u" ".join(e for e in category if e)
 
-                        self.database.insert(elem[u"category"], elem[u"command"], elem[u"brief"], elem[u"detail"])
+                        self.database.insert(elem[u"category"], elem[u"command"], elem[u"brief"], elem[u"detail"], elem[u"exam"])
                     except Exception:
                         print u"有bug啊，联系作者吧：qq:1402638902"
                         continue
@@ -304,6 +378,10 @@ def main():
     elif args[0] == u"-o":
         filename, category = parse_args(args[1:])
         pyhelp.output(filename=filename, category=category)
+
+    elif args[0] == u"-t":
+        category, empty = parse_args(args[1:])
+        pyhelp.exam(category)
 
     else:
         command, category = parse_args(args)
