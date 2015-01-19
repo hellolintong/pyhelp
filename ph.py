@@ -182,8 +182,9 @@ class PyHelp(object):
               添加-detail参数表示是否详细显示命令。
 
             7:测试命令: 在终端输入ph.py -t category。该命令会显示category下的所有命令的测试内容，用户根据提示信息，输入相应的命令，直到输入全部的命令为止。
+              如果你不知道答案，输入tell me会提示你答案。如果你想退出，输入i quit
 
-            7：寻求帮助: 在终端中输入ph.py -h，会显示详细的帮助信息, -h 是help的缩写。
+            8：寻求帮助: 在终端中输入ph.py -h，会显示详细的帮助信息, -h 是help的缩写。
         """
 
     def __strip_blank(self, data):
@@ -214,7 +215,11 @@ class PyHelp(object):
                     input_command = self.__strip_blank(input_command)
                     result_command = exam[1]
                     result_command = self.__strip_blank(result_command)
-                    if input_command == result_command:
+                    if input_command == u"iquit":
+                        return
+                    if input_command == u"tellme":
+                        print exam[1]
+                    elif input_command == result_command:
                         del exam_list[exam_index]
                     if not exam_list:
                         del result_list[index]
@@ -241,7 +246,7 @@ class PyHelp(object):
                     print elem[0]
                     print elem[1]
                     print u"==="
-
+                print u"\n"
             else:
                 print u"category: " + result[u"category"]
                 #print u"\n"
@@ -311,19 +316,22 @@ class PyHelp(object):
 
         for filename in file_list:
             with codecs.open(filename, u"r", u"utf-8") as infile:
-                json_data = json.load(infile)
+                try:
+                    json_data = json.load(infile)
+                except Exception, e:
+                    print e
+                    return
                 for elem in json_data:
                     try:
                         command = elem[u"command"].split(u" ")
-                        elem[u"command"] = u" ".join([e for e in command if e])
+                        elem[u"command"] = u" ".join([n for n in command if n])
 
                         category = elem[u"category"].split(u" ")
-                        elem[u"category"] = u" ".join(e for e in category if e)
+                        elem[u"category"] = u" ".join([n for n in category if n])
 
                         self.database.insert(elem[u"category"], elem[u"command"], elem[u"brief"], elem[u"detail"], elem[u"exam"])
-                    except Exception:
-                        print u"有bug啊，联系作者吧：qq:1402638902"
-                        continue
+                    except Exception, e:
+                        print e
             os.remove(filename)
         self.database.close()
 
