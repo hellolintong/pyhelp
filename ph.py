@@ -8,7 +8,7 @@ import codecs
 import json
 import sqlite3
 import subprocess
-
+#import pdb
 
 class Database(object):
     def __init__(self, db_name):
@@ -182,9 +182,8 @@ class PyHelp(object):
               添加-detail参数表示是否详细显示命令。
 
             7:测试命令: 在终端输入ph.py -t category。该命令会显示category下的所有命令的测试内容，用户根据提示信息，输入相应的命令，直到输入全部的命令为止。
-              如果你不知道答案，输入tell me会提示你答案。如果你想退出，输入i quit
 
-            8：寻求帮助: 在终端中输入ph.py -h，会显示详细的帮助信息, -h 是help的缩写。
+            7：寻求帮助: 在终端中输入ph.py -h，会显示详细的帮助信息, -h 是help的缩写。
         """
 
     def __strip_blank(self, data):
@@ -199,11 +198,15 @@ class PyHelp(object):
             result = result_list[index]
             if not result[u"exam"]:
                 print result[u"brief"]
-                input_command = raw_input(u":")
+                input_command = raw_input(u":").decode(sys.stdin.encoding)
                 input_command = self.__strip_blank(input_command)
                 result_command = result[u"command"]
                 result_command = self.__strip_blank(result_command)
-                if input_command == result_command:
+                if input_command == u"tellme":
+                    print result[u"command"]
+                elif input_command == u"iquit":
+                    return
+                elif input_command == result_command:
                     del result_list[index]
             else:
                 exam_index = 0
@@ -211,12 +214,10 @@ class PyHelp(object):
                 while exam_list:
                     exam = exam_list[exam_index]
                     print exam[0]
-                    input_command = raw_input(u":")
+                    input_command = raw_input(u":").decode(sys.stdin.encoding)
                     input_command = self.__strip_blank(input_command)
                     result_command = exam[1]
                     result_command = self.__strip_blank(result_command)
-                    if input_command == u"iquit":
-                        return
                     if input_command == u"tellme":
                         print exam[1]
                     elif input_command == result_command:
