@@ -582,5 +582,4 @@ def main():
 
 
 if __name__ == u"__main__":
-    import pdb;pdb.set_trace()
     main()
