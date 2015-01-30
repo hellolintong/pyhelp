@@ -36,27 +36,27 @@ ph.py是一款帮助您记住日常命令的工具。我们经常会反复的查
 关于输入文件的格式说明：<br/>
 输入文件中每一条命令的格式如下：<br/>
 
-    ====pyhelp start====<br/>
-    ====category start====<br/>
-    ====category end====<br/>
-    ====command start====<br/>
-    ====command end====<br/>
-    ====brief start====<br/>
-    ====brief end====<br/>
-    ====detail start====<br/>
-    ====detail end====<br/>
-    ====exam start====<br/>
-    ====question start====<br/>
-    ====question end====<br/>
-    ====answer start====<br/>
-    ====answer end====<br/>
-    ====exam end====<br/>
-    ====pyhelp end====<br/>
+    ====pyhelp start====
+    ====category start====
+    ====category end====
+    ====command start====
+    ====command end====
+    ====brief start====
+    ====brief end====
+    ====detail start====
+    ====detail end====
+    ====exam start====
+    ====question start====
+    ====question end====
+    ====answer start====
+    ====answer end====
+    ====exam end====
+    ====pyhelp end====
     
 ##  说明：
-    ====pyhelp start====与====pyhelp end==== ：标志命令的开始与结束<br/>
-    ====category start====与====category end====：标志category范围，用户只要在该标志内写入category信息即可。<br/>
-    ====exam start====和====exam end====：标志测试的范围。<br/>
-    用户需要在下面的====equestion start====和====equestion end====e中写入问题，<br/>
-    并在====answer start====与====answer end====中写入答案。<br/>
-    如果有多个测试单元，则复制====question start===== ，====question end====以及====answer start====与====answer end====标志即可。<br/>
+====pyhelp start====与====pyhelp end==== ：标志命令的开始与结束
+====category start====与====category end====：标志category范围，用户只要在该标志内写入category信息即可。<br/>
+====exam start====和====exam end====：标志测试的范围。<br/>
+用户需要在下面的====equestion start====和====equestion end====e中写入问题，<br/>
+并在====answer start====与====answer end====中写入答案。<br/>
+如果有多个测试单元，则复制====question start===== ，====question end====以及====answer start====与====answer end====标志即可。<br/>
