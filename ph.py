@@ -129,8 +129,10 @@ class PyHelp(object):
             self.home_dir = self.home_dir.strip()
             if self.home_dir.endswith(u"/"):
                 self.home_dir = self.home_dir[:-1]
-        self.data_dir = self.home_dir + os.sep + u"pyhelp"
-        self.database = Database(self.home_dir + os.sep + u"pyhelp.db")
+        self.data_dir = self.home_dir + os.sep + u"pyhelp_data"
+        if not os.path.exists(self.data_dir):
+            os.mkdir(self.data_dir)
+        self.database = Database(self.data_dir + os.sep +  u"pyhelp.db")
         self.elem_split_flag = {
                              u"category": (u"====category start====", u"====category end===="),
                              u"command": (u"====command start====", u"====command end===="),
@@ -194,10 +196,7 @@ class PyHelp(object):
     def help():
         print u"""
             ph.py是一款帮助您记住日常命令的工具。我们经常会反复的查找资料看一个命令如何使用，ph.py就是帮助您解决这方面的困扰.
-            说明：
-            ①：第一次使用该软件，请将ph.py文件拷贝到/usr/bin/目录下，并设置文件权限为755
-            ②：下面示例中的中括号中的内容表示是任选的。
-            ③：pyhelp记录的每个命令有如下相关信息：
+            pyhelp记录的每个命令有如下相关信息：
                 1：category：该命令所属的范围，比如linux命令，或者是git命令等。
                 2：command: 命令名称。
                 3：brief：命令的简要说明（在默认情况下,查询命令只显示命令的简要说明信息）。
@@ -249,12 +248,12 @@ class PyHelp(object):
           ====pyhelp end====
 
             说明：
-            ====pyhelp start====与====pyhelp end==== ：标志命令的开始与结束
-            ====category start====与====category end====：标志category范围，用户只要在该标志内写入category信息即可。
-            ====exam start====和====exam end====：标志测试的范围。
-            用户需要在下面的====equestion start====和====equestion end====e中写入问题，
-            并在====answer start====与====answer end====中写入答案。
-            如果有多个测试单元，则复制====question start===== ，====question end====以及====answer start====与====answer end====标志即可。
+            pyhelp start与pyhelp end：标志命令的开始与结束
+            category start与category end：标志category范围，用户只要在该标志内写入category信息即可。
+            exam start和exam end：标志测试的范围。
+            用户需要在下面的question start和question end中写入问题，
+            并在answer start与answer end中写入答案。
+            如果有多个测试单元，则复制question start,question end以及answer start与answer end标志即可。
         """
 
     def exam(self, category):
@@ -489,15 +488,16 @@ class PyHelp(object):
                         temp_dict[u"detail"] = u"" if not detail else u"".join(detail[0])
                         temp_dict[u"exam"] = []
                         for index, question in enumerate(exam_question):
-                            exam_question = PyHelp.__strip_blank(question)
-                            exam_answer = PyHelp.__strip_blank(exam_answer[index])
-                            temp_dict[u"exam"].append((exam_question, exam_answer))
-                        #可能出现重复
+                            question = PyHelp.__strip_blank(question)
+                            answer = PyHelp.__strip_blank(exam_answer[index])
+                            temp_dict[u"exam"].append((question, answer))
+                       #可能出现重复
                         try:
                             self.database.insert(temp_dict[u"category"], temp_dict[u"command"], temp_dict[u"brief"], temp_dict[u"detail"], temp_dict[u"exam"])
                         except Exception:
                             continue
-            else:
+                os.remove(filename)
+            elif filename.endswith(u".json"):
                 with codecs.open(filename, u"r", u"utf-8") as infile:
                     try:
                         json_data = json.load(infile)
@@ -513,8 +513,7 @@ class PyHelp(object):
                             self.database.insert(elem[u"category"], elem[u"command"], elem[u"brief"], elem[u"detail"], elem[u"exam"])
                         except Exception, e:
                              print e
-
-            os.remove(filename)
+                os.remove(filename)
         self.database.close()
 
 
