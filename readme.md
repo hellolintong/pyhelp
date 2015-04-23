@@ -38,37 +38,37 @@ ph.py是一款帮助您记住日常命令的工具。我们经常会反复的查
 关于输入文件的格式说明：<br/>
 输入文件中每一条命令的格式如下：<br/>
 
-    ====pyhelp start====<br/>
+    ====pyhelp start====
 
-    ====category start====<br/>
-        这里面是Category相关内容<br/>
-    ====category end====<br/>
+    ====category start====
+        这里面是Category相关内容
+    ====category end====
 
-    ====command start====<br/>
-        这里是command相关的内容<br/>
-    ====command end====<br/>
+    ====command start====
+        这里是command相关的内容
+    ====command end====
 
-    ====brief start====<br/>
-        这里是命令的简要描述<br/>
-    ====brief end====<br/>
+    ====brief start====
+        这里是命令的简要描述
+    ====brief end====
 
-    ====detail start====<br/>
-        这里是命令的详细信息<br/>
-    ====detail end====<br/>
+    ====detail start====
+        这里是命令的详细信息
+    ====detail end====
     
-    ====exam start====<br/>
-        这里是测试相关部分<br/>
-    ====question start====<br/>
-        测试问题开始<br/>
-    ====question end====<br/>
+    ====exam start====
+        这里是测试相关部分
+    ====question start====
+        测试问题开始
+    ====question end====
 
-    ====answer start====<br/>
-        测试问题相关的答案<br/>
-    ====answer end====<br/>
-
-    ====exam end====<br/>
-
-    ====pyhelp end====<br/>
+    ====answer start====
+        测试问题相关的答案
+    ====answer end====
+    
+    ====exam end====
+    
+    ====pyhelp end====
     
 ###  说明：
 pyhelp start与pyhelp end：标志命令的开始与结束<br/>
